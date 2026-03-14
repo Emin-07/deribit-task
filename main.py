@@ -12,7 +12,7 @@ async def root() -> dict:
     return {"Message": "Hello world!"}
 
 
-@app.post("/")
+@app.post("/recreate_tables")
 async def recreate_tables():
     from core.setup import Base, async_engine
 
@@ -21,6 +21,16 @@ async def recreate_tables():
         await conn.run_sync(Base.metadata.create_all)
 
     return {"Message": "All tables were recreated"}
+
+
+@app.post("/drop_tables")
+async def drop_tables():
+    from core.setup import Base, async_engine
+
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+    return {"Message": "All tables were dropped"}
 
 
 if __name__ == "__main__":

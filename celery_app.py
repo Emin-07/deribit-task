@@ -3,11 +3,10 @@ import asyncio
 from celery import Celery
 from celery.schedules import crontab
 
+from core.setup import settings
 from services.price_services import create_price_service
 
-celery_app = Celery(
-    "worker", broker="redis://localhost:6379/0", backend="redis://localhost:6379/0"
-)
+celery_app = Celery("worker", broker=settings.REDIS_URL, backend=settings.REDIS_URL)
 
 
 @celery_app.task

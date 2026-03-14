@@ -1,0 +1,101 @@
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: deribit_db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN                 # ✅ Data directory
+      - DAC_OVERRIDE          # ✅ File operations
+      - SETGID                # ✅ Group operations
+      - SETUID                # ✅ User operations    
+
+  redis:
+    image: redis:8-alpine
+    container_name: deribit_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    container_name: deribit_api
+    command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+        DATABASE_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+        REDIS_URL: "redis://redis:6379/0"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN                 # ✅ File ownership
+      - SETGID                # ✅ Group ID changes
+      - SETUID   
+
+  #Celery Worker
+  worker:
+    build: .
+    container_name: deribit_worker
+    command: uv run celery -A celery_app worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+        DATABASE_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+        REDIS_URL: "redis://redis:6379/0"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  #Celery Beat
+  beat:
+    build: .
+    container_name: deribit_beat
+    command: uv run celery -A celery_app beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+        REDIS_URL: "redis://redis:6379/0"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+
+volumes:
+  pgdata:
+  redis_data:

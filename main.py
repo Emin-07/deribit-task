@@ -1,29 +1,29 @@
-import asyncio
-import json
+from fastapi import FastAPI
 
-import aiohttp
-from fastapi import APIRouter
+from routes.price_routes import router as price_router
 
-# app = APIRouter()
+app = FastAPI()
+
+app.include_router(price_router)
 
 
-async def get_deribit_instruments():
-    url = "https://test.deribit.com/api/v2/public/get_index_price?index_name=eth_usd"
-    params = {"currency": "BTC"}
+@app.get("/", response_model=dict)
+async def root() -> dict:
+    return {"Message": "Hello world!"}
 
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(url, params=params) as response:
-                response.raise_for_status()
 
-                data = await response.json()
-                return data
-        except aiohttp.ClientError as e:
-            print(f"Ошибка при запросе к Deribit {e}")
-            return None
+@app.post("/")
+async def recreate_tables():
+    from core.setup import Base, async_engine
+
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+
+    return {"Message": "All tables were recreated"}
 
 
 if __name__ == "__main__":
-    result = asyncio.run(get_deribit_instruments())
-    if result:
-        print(json.dumps(result, indent=4, ensure_ascii=False))
+    import uvicorn
+
+    uvicorn.run("main:app", reload=True)

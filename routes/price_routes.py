@@ -37,9 +37,9 @@ async def get_latest_price(
 
 @router.get("/history", response_model=List[PriceRead])
 async def get_prices_by_date(
-    ticker: str = Query(..., example="btc_usd"),
+    ticker: str = Query(..., examples=["eth", "ethereum", "btc", "bitcoin"]),
     start_ts: int = Query(..., description="Start UNIX timestamp"),
-    end_ts: int = Query(default=time.time(), description="End UNIX timestamp"),
+    end_ts: int = Query(default=int(time.time()), description="End UNIX timestamp"),
 ):
     return await get_prices_by_date_service(
         ticker=ticker, start_ts=start_ts, end_ts=end_ts

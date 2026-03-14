@@ -17,4 +17,4 @@ class PriceHistory(Base):
 
     ticker: Mapped[str] = mapped_column(String(16))
     price: Mapped[float]
-    timestamp: Mapped[float] = mapped_column(default=time.time())
+    timestamp: Mapped[float] = mapped_column(default=time.time)

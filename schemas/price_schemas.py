@@ -1,4 +1,3 @@
-import time
 import uuid
 from typing import Literal
 
@@ -14,7 +13,5 @@ class PriceCreate(BaseModel):
 class PriceRead(PriceCreate):
     id: uuid.UUID = Field(description="Unique id of the price")
     price: float = Field(description="Price for the ticker in usd")
-    timestamp: float = Field(
-        description="Timestamp, made with time.time()", default=time.time()
-    )
+    timestamp: float = Field(description="Timestamp, made with time.time()")
     model_config = ConfigDict(from_attributes=True)

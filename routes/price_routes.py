@@ -13,7 +13,7 @@ from services.price_services import (
 router = APIRouter(prefix="/prices", tags=["Prices"])
 
 
-@router.get("/", response_model=List[PriceRead])
+@router.get("/all", response_model=List[PriceRead])
 async def get_all_prices(
     ticker: Annotated[str, Query(..., examples=["eth", "ethereum", "btc", "bitcoin"])],
 ):

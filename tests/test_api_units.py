@@ -95,7 +95,7 @@ def test_get_all_by_ticker_unit(mock_get_all):
         },
     ]
 
-    response = client.get("prices/?ticker=btc")
+    response = client.get("/prices/all?ticker=btc")
 
     assert response.status_code == 200
     assert isinstance(response.json(), list)

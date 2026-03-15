@@ -12,11 +12,8 @@ client = TestClient(app)
 
 
 # 1. Тест для эндпоинта /latest
-@patch(
-    "routes.price_routes.get_latest_price_service"
-)  # Путь к вашей функции запроса в БД
+@patch("routes.price_routes.get_latest_price_service")
 def test_get_latest_price_unit(mock_get_latest):
-    # Настраиваем мок: что "как будто" вернула база данных
     mock_get_latest.return_value = {
         "id": uuid.uuid4(),
         "ticker": "btc",
@@ -35,7 +32,6 @@ def test_get_latest_price_unit(mock_get_latest):
 # 2. Тест для эндпоинта /history
 @patch("routes.price_routes.get_prices_by_date_service")
 def test_get_history_unit(mock_get_history):
-    # Имитируем список цен за период
     mock_get_history.return_value = [
         {
             "id": uuid.uuid4(),
@@ -78,7 +74,6 @@ def test_get_latest_not_found(mock_get_latest):
 
 @patch("routes.price_routes.get_all_prices_service")
 def test_get_all_by_ticker_unit(mock_get_all):
-    # Имитируем, что в базе очень много записей для btc
     mock_get_all.return_value = [
         {
             "id": uuid.uuid4(),
@@ -100,14 +95,11 @@ def test_get_all_by_ticker_unit(mock_get_all):
         },
     ]
 
-    # Делаем запрос к корневому эндпоинту тикера
     response = client.get("prices/?ticker=btc")
 
-    # Проверки
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert len(response.json()) == 3
     assert response.json()[0]["ticker"] == "btc"
 
-    # Проверяем, что метод сервиса был вызван именно с этим тикером
     mock_get_all.assert_called_once_with("btc")

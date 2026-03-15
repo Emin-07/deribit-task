@@ -1,16 +1,19 @@
-FROM python:3.13-trixie
+FROM python:3.13-slim-bookworm
 
-ENV PYTHONBUFFERED=1
+ENV UV_LINK_MODE=copy
+ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-RUN pip install uv && \
-    uv --version
+# Установка uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY pyproject.toml .
+# Сначала копируем файлы зависимостей (для кэширования слоев)
+COPY pyproject.toml uv.lock ./
 
-RUN uv sync
+# Синхронизируем зависимости без копирования всего кода
+RUN uv sync --frozen --no-install-project
 
 COPY . .
 
@@ -18,6 +21,8 @@ EXPOSE 8000
 
 RUN useradd -m appuser
 
+RUN chmod +x entrypoint.sh && chown -R appuser:appuser /app
+
 USER appuser
 
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["/app/entrypoint.sh"]

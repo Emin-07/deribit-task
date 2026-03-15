@@ -33,3 +33,5 @@
 **/values.dev.yaml
 LICENSE
 README.md
+celerybeat-schedule*
+celery-schedule*

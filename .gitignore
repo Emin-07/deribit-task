@@ -16,3 +16,5 @@ wheels/
 #Celery
 celerybeat-schedule*
 celery-schedule*]
+
+.env

@@ -9,7 +9,10 @@ wheels/
 # Virtual environments
 .venv
 
+# Cache
 .mypy_cache/
+.pytest_cache/
 
+#Celery
 celerybeat-schedule*
-celery-schedule*
+celery-schedule*]
